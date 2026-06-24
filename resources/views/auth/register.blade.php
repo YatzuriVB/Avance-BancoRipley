@@ -112,42 +112,29 @@
             <form method="POST" action="{{ route('register') }}">
                 @csrf
 
-                <div class="field-row">
-                    <div class="field">
-                        <label for="name">Nombre completo</label>
-                        <input id="name" type="text" name="name" value="{{ old('name') }}"
-                               placeholder="Yatzuri Valdivia" required autofocus autocomplete="name" />
-                        @error('name')
-                            <div class="error">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="field">
-                        <label for="dni">DNI</label>
-                        <input id="dni" type="text" name="dni" value="{{ old('dni') }}"
-                               placeholder="12345678" maxlength="8" />
-                    </div>
-                </div>
-
                 <div class="field">
-                    <label for="email">Correo electrónico</label>
-                    <input id="email" type="email" name="email" value="{{ old('email') }}"
-                           placeholder="correo@ejemplo.com" required autocomplete="username" />
-                    @error('email')
+                    <label for="dni">DNI</label>
+                    <input id="dni" type="text" name="dni" value="{{ old('dni') }}"
+                        placeholder="12345678" maxlength="8" required autofocus />
+                    @error('dni')
                         <div class="error">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div class="field">
-                    <label for="telefono">Teléfono</label>
-                    <input id="telefono" type="text" name="telefono" value="{{ old('telefono') }}"
-                           placeholder="999 888 777" maxlength="9" />
+                    <label for="username">Nombre de usuario</label>
+                    <input id="username" type="text" name="username" value="{{ old('username') }}"
+                        placeholder="Ej: jvaldivia26" required autocomplete="username" />
+                    @error('username')
+                        <div class="error">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="field-row">
                     <div class="field">
                         <label for="password">Contraseña</label>
                         <input id="password" type="password" name="password"
-                               placeholder="••••••••" required autocomplete="new-password" />
+                            placeholder="••••••••" required autocomplete="new-password" />
                         @error('password')
                             <div class="error">{{ $message }}</div>
                         @enderror
@@ -155,8 +142,8 @@
                     <div class="field">
                         <label for="password_confirmation">Confirmar contraseña</label>
                         <input id="password_confirmation" type="password"
-                               name="password_confirmation" placeholder="••••••••"
-                               required autocomplete="new-password" />
+                            name="password_confirmation" placeholder="••••••••"
+                            required autocomplete="new-password" />
                     </div>
                 </div>
 
@@ -180,7 +167,7 @@
             </a>
 
             <div class="back-link">
-                <a href="https://www.bancoripley.com.pe">← Volver a bancoripley.com.pe</a>
+                <a href="/">← Volver a bancoripley.com.pe</a>
             </div>
         </div>
     </div>

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Auth\Events\Lockout;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -17,13 +16,10 @@ class LoginRequest extends FormRequest
         return true;
     }
 
-    /**
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            'dni'      => ['required', 'string'],
+            'username' => ['required', 'string'],
             'password' => ['required', 'string'],
         ];
     }
@@ -32,11 +28,14 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt(['dni' => $this->dni, 'password' => $this->password], $this->boolean('remember'))) {
+        if (! Auth::attempt([
+            'username' => $this->username,
+            'password' => $this->password,
+        ], $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'dni' => trans('auth.failed'),
+                'username' => 'El usuario o contraseña son incorrectos.',
             ]);
         }
 
@@ -54,7 +53,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'dni' => trans('auth.throttle', [
+            'username' => trans('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),
@@ -63,6 +62,6 @@ class LoginRequest extends FormRequest
 
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('dni')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('username')).'|'.$this->ip());
     }
 }
