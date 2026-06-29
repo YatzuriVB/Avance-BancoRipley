@@ -116,38 +116,53 @@
 <!-- Modal pago de servicio -->
 <div class="modal-overlay" id="modalServicio">
     <div class="modal">
-        <div class="modal-title"><i class="ti ti-receipt" style="color:#5B2D8E;margin-right:6px;"></i>Pago de servicio</div>
-        <div class="modal-empresa" id="modalEmpresaNombre">—</div>
+        <form method="POST" action="{{ route('pagos.servicios.store') }}">
+            @csrf
+            <input type="hidden" name="pkconvenio" id="inputPkconvenio">
 
-        <div class="info-box">
-            <i class="ti ti-info-circle" style="flex-shrink:0;"></i>
-            <span>Esta es una simulación de pago. En un entorno real se integraría con el proveedor del servicio.</span>
-        </div>
+            <div class="modal-title"><i class="ti ti-receipt" style="color:#5B2D8E;margin-right:6px;"></i>Pago de servicio</div>
+            <div class="modal-empresa" id="modalEmpresaNombre">—</div>
 
-        <div class="form-group">
-            <label>Número de suministro / código</label>
-            <input type="text" class="form-control" placeholder="Ej: 123456789">
-        </div>
-        <div class="form-group">
-            <label>Monto a pagar (S/)</label>
-            <input type="number" class="form-control" placeholder="0.00" min="1" step="0.01">
-        </div>
-        <div class="form-group">
-            <label>Débitar de cuenta</label>
-            <select class="form-control">
-                <option>— Selecciona cuenta —</option>
-            </select>
-        </div>
+            <div class="info-box">
+                <i class="ti ti-info-circle" style="flex-shrink:0;"></i>
+                <span>Esta es una simulación de pago. En un entorno real se integraría con el proveedor del servicio.</span>
+            </div>
 
-        <div class="modal-btns">
-            <button class="btn-cancel" onclick="cerrarServicio()">Cancelar</button>
-            <button class="btn-confirm" onclick="alert('Funcionalidad de integración con proveedor pendiente de configurar.');cerrarServicio();">Pagar</button>
-        </div>
+            @if($errors->any())
+                <div style="background:#fde8e8;color:#b91c1c;padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:14px;">
+                    {{ $errors->first() }}
+                </div>
+            @endif
+
+            <div class="form-group">
+                <label>Número de suministro / código</label>
+                <input type="text" name="codigo_suministro" class="form-control" placeholder="Ej: 123456789" required>
+            </div>
+            <div class="form-group">
+                <label>Monto a pagar (S/)</label>
+                <input type="number" name="monto" class="form-control" placeholder="0.00" min="1" max="5000" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label>Débitar de cuenta</label>
+                <select name="pkcuentaahorro" class="form-control" required>
+                    <option value="">— Selecciona cuenta —</option>
+                    @foreach($cuentasAhorro ?? [] as $cuenta)
+                        <option value="{{ $cuenta->pkcuentaahorro }}">{{ $cuenta->codcuentaahorro }} — S/ {{ number_format($cuenta->saldo, 2) }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="modal-btns">
+                <button type="button" class="btn-cancel" onclick="cerrarServicio()">Cancelar</button>
+                <button type="submit" class="btn-confirm">Pagar</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
 function abrirServicio(pkconvenio, empresa, servicio) {
+    document.getElementById('inputPkconvenio').value = pkconvenio;
     document.getElementById('modalEmpresaNombre').textContent = empresa + ' · ' + servicio;
     document.getElementById('modalServicio').classList.add('show');
 }

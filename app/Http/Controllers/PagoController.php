@@ -177,8 +177,92 @@ class PagoController extends Controller
         // Agrupar por empresa
         $porEmpresa = $convenios->groupBy('desempresa');
 
+        $cuentasAhorro = DB::table('dcuentaahorro as d')
+            ->join('fcuentaahorro as f', 'f.pkcuentaahorro', '=', 'd.pkcuentaahorro')
+            ->where('d.pkcliente', $pkcliente)
+            ->select('d.pkcuentaahorro', 'd.codcuentaahorro', 'f.montosaldodisponible_ac as saldo')
+            ->orderBy('f.periododia', 'desc')
+            ->get()
+            ->unique('pkcuentaahorro');
+
         $cliente = DB::table('dcliente')->where('pkcliente', $pkcliente)->first();
 
-        return view('pagos.servicios', compact('porEmpresa', 'cliente'));
+        return view('pagos.servicios', compact('porEmpresa', 'cliente', 'cuentasAhorro'));
+    }
+
+    public function serviciosStore(Request $request)
+    {
+        $request->validate([
+            'pkconvenio' => 'required|integer',
+            'codigo_suministro' => 'required|string|max:50',
+            'monto' => 'required|numeric|min:1|max:5000',
+            'pkcuentaahorro' => 'required|integer',
+        ]);
+
+        $pkcliente = auth()->user()->pkcliente;
+
+        $convenio = DB::table('dconvenio')->where('pkconvenio', $request->pkconvenio)->first();
+
+        if (!$convenio) {
+            return back()->withErrors(['error' => 'Servicio no válido.']);
+        }
+
+        $cuentaAhorro = DB::table('dcuentaahorro as d')
+            ->join('fcuentaahorro as f', 'f.pkcuentaahorro', '=', 'd.pkcuentaahorro')
+            ->where('d.pkcuentaahorro', $request->pkcuentaahorro)
+            ->where('d.pkcliente', $pkcliente)
+            ->select('f.montosaldodisponible_ac as saldo', 'f.pkagencia', 'f.pkmoneda')
+            ->orderBy('f.periododia', 'desc')
+            ->first();
+
+        if (!$cuentaAhorro) {
+            return back()->withErrors(['error' => 'Cuenta de ahorro no válida.']);
+        }
+
+        if ($cuentaAhorro->saldo < $request->monto) {
+            return back()->withErrors(['error' => 'Saldo insuficiente. Disponible: S/ ' . number_format($cuentaAhorro->saldo, 2)]);
+        }
+
+        DB::transaction(function () use ($request, $convenio, $cuentaAhorro) {
+            $periododia = (int) now()->format('Ymd');
+
+            $pkconcepto = DB::table('dconceptooperacion')
+                ->where('codconceptooperacion', 'PSER')
+                ->value('pkconceptooperacion');
+            $pktipo = DB::table('dtipooperacion')->value('pktipooperacion');
+            $pkcanal = DB::table('dcanaltransaccional')
+                ->where('codcanaltransaccional', 'WEB')
+                ->value('pkcanaltransaccional');
+
+            DB::table('foperaciones')->insert([
+                'codtipkar' => 'AH',
+                'pkcuentaahorro' => $request->pkcuentaahorro,
+                'codkardex' => 'SERV-' . now()->format('YmdHis'),
+                'pkconceptooperacion' => $pkconcepto,
+                'fechahoraoperacion' => now(),
+                'periododia' => $periododia,
+                'pktipooperacion' => $pktipo,
+                'pkmoneda' => $cuentaAhorro->pkmoneda,
+                'pkagenciaorigen' => $cuentaAhorro->pkagencia,
+                'pkcanaltransaccional' => $pkcanal,
+                'codtipoegresoingreso' => 'E',
+                'montooperacion' => $request->monto,
+                'montopagoconcepto' => $request->monto,
+                'fecultactualizacion' => now(),
+            ]);
+
+            // Actualizar saldo de la cuenta
+            DB::table('fcuentaahorro')
+                ->where('pkcuentaahorro', $request->pkcuentaahorro)
+                ->orderByDesc('periododia')
+                ->limit(1)
+                ->update([
+                    'montosaldodisponible_ac' => DB::raw('montosaldodisponible_ac - ' . $request->monto),
+                    'fecultactualizacion' => now(),
+                ]);
+        });
+
+        return redirect()->route('pagos.servicios')
+            ->with('success', "Pago de {$convenio->desempresa} realizado correctamente por S/ " . number_format($request->monto, 2));
     }
 }

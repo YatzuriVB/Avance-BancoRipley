@@ -59,6 +59,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/pagos/credito', [PagoController::class, 'creditoIndex'])->name('pagos.credito');
     Route::post('/pagos/credito', [PagoController::class, 'creditoStore'])->name('pagos.credito.store');
     Route::get('/pagos/servicios', [PagoController::class, 'serviciosIndex'])->name('pagos.servicios');
+    Route::post('/pagos/servicios', [PagoController::class, 'serviciosStore'])->name('pagos.servicios.store');
 
 });
 
