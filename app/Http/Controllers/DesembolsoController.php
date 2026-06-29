@@ -48,8 +48,14 @@ class DesembolsoController extends Controller
                 throw new \Exception('La solicitud no está en estado Aprobado.');
             }
 
-            $tasaAnual = 28.0;
-            $tasaMensual = $tasaAnual / 100 / 12;
+                        // TEA según tarifario oficial Banco Ripley - Préstamo Súper Efectivo
+            // Rango vigente: 15.94% - 87.90% según evaluación crediticia del cliente
+            // Microempresa (sin seguro de desgravamen): 43.92%
+            $producto = DB::table('dproducto')->where('pkproducto', $solicitud->pkproducto)->first();
+            $tasaAnual = str_contains(strtolower($producto->destipocredito ?? ''), 'micro') ? 43.92 : 35.0;
+            // Conversión correcta de TEA a tasa mensual efectiva
+            // tasa_mensual = (1 + TEA)^(1/12) - 1
+            $tasaMensual = pow(1 + ($tasaAnual / 100), 1/12) - 1;
             $monto = $solicitud->montoaprobadocredito;
             $plazo = $solicitud->plazoaprobadocredito;
 
