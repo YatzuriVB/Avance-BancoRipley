@@ -26,6 +26,9 @@
         <a href="{{ route('core.solicitud.buscar.form') }}" class="flex items-center px-6 py-2.5 text-gray-600 hover:bg-gray-50 transition">
             <i class="ti ti-file-text text-lg text-gray-400 mr-3"></i> 2. Registro de solicitud
         </a>
+        <a href="{{ route('core.clientes.apertura') }}" class="flex items-center px-6 py-2.5 text-gray-600 hover:bg-gray-50 transition">
+            <i class="ti ti-user-plus text-lg text-gray-400 mr-3"></i> Apertura de cliente
+        </a>
         @endif
 
         @if($puedeComite)

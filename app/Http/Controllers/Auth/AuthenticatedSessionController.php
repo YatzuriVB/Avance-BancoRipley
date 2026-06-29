@@ -28,6 +28,15 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Verificar si debe cambiar su contraseña (primer login con clave temporal)
+        $debeActualizar = \Illuminate\Support\Facades\DB::table('usuarios_homebanking')
+            ->where('pkusuario', auth()->id())
+            ->value('debe_cambiar_password');
+
+        if ($debeActualizar === 'S') {
+            return redirect()->route('password.force.form');
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

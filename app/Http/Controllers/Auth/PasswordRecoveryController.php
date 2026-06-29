@@ -73,4 +73,34 @@ class PasswordRecoveryController extends Controller
 
         return redirect()->route('login')->with('status', 'Tu contraseña fue actualizada correctamente. Ya puedes iniciar sesión.');
     }
+
+    public function showForceChangeForm(): \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+    {
+        $debeActualizar = DB::table('usuarios_homebanking')
+            ->where('pkusuario', auth()->id())
+            ->value('debe_cambiar_password');
+
+        if ($debeActualizar !== 'S') {
+            return redirect()->route('dashboard');
+        }
+
+        return view('auth.force-password-change');
+    }
+
+    public function forceChange(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)->mixedCase()->numbers()],
+        ]);
+
+        DB::table('usuarios_homebanking')
+            ->where('pkusuario', auth()->id())
+            ->update([
+                'password_hash' => Hash::make($request->password),
+                'debe_cambiar_password' => 'N',
+                'fecultactualizacion' => now(),
+            ]);
+
+        return redirect()->route('dashboard')->with('success', 'Tu contraseña fue actualizada correctamente.');
+    }
 }

@@ -1,4 +1,5 @@
 <?php
+use App\Http\Controllers\AperturaClienteController;
 use App\Http\Controllers\GestionCuentaController;
 use App\Http\Controllers\RegistroSolicitudController;
 use App\Http\Controllers\MoraController;
@@ -30,6 +31,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/perfil', [PerfilController::class, 'index'])->name('perfil');
     Route::patch('/perfil/password', [PerfilController::class, 'updatePassword'])->name('perfil.password');
 
+    Route::get('/force-password-change', [\App\Http\Controllers\Auth\PasswordRecoveryController::class, 'showForceChangeForm'])->name('password.force.form');
+    Route::post('/force-password-change', [\App\Http\Controllers\Auth\PasswordRecoveryController::class, 'forceChange'])->name('password.force.update');
+    
     // Perfil legacy Breeze (mantener por compatibilidad)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -76,6 +80,8 @@ Route::prefix('core')->group(function () {
         Route::post('/solicitudes/registro/{pkcliente}', [RegistroSolicitudController::class, 'store'])->name('core.solicitud.registrar.store');
         Route::get('/solicitudes', [SolicitudBandejaController::class, 'index'])->name('core.solicitudes.bandeja');
         Route::post('/solicitudes/{id}/evaluar', [SolicitudBandejaController::class, 'evaluar'])->name('core.solicitud.evaluar');
+        Route::get('/clientes/apertura', [AperturaClienteController::class, 'create'])->name('core.clientes.apertura');
+        Route::post('/clientes/apertura', [AperturaClienteController::class, 'store'])->name('core.clientes.apertura.store');
     });
 
     // Comité: solo Funcionario de Créditos
@@ -97,11 +103,8 @@ Route::prefix('core')->group(function () {
     });
     Route::middleware('core.rol:administrador')->group(function () {
         Route::post('/mora/{id}/judicial', [MoraController::class, 'derivarJudicial'])->name('core.mora.judicial');
-        Route::middleware('core.rol:administrador')->group(function () {
-            Route::post('/mora/{id}/judicial', [MoraController::class, 'derivarJudicial'])->name('core.mora.judicial');
-            Route::get('/cuentas/gestion', [GestionCuentaController::class, 'index'])->name('core.cuentas.gestion');
-            Route::post('/cuentas/{id}/estado', [GestionCuentaController::class, 'cambiarEstado'])->name('core.cuenta.cambiarestado');
-        });
+        Route::get('/cuentas/gestion', [GestionCuentaController::class, 'index'])->name('core.cuentas.gestion');
+        Route::post('/cuentas/{id}/estado', [GestionCuentaController::class, 'cambiarEstado'])->name('core.cuenta.cambiarestado');
     });
 
     // Ver detalle de solicitud: cualquier rol logueado puede ver

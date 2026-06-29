@@ -27,6 +27,7 @@ class RegisteredUserController extends Controller
         $request->validate([
             'dni'      => ['required', 'string', 'digits:8'],
             'username' => ['required', 'string', 'max:50', 'alpha_dash'],
+            'email'    => ['required', 'email'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -67,6 +68,7 @@ class RegisteredUserController extends Controller
             'pkcliente' => $cliente->pkcliente,
             'username' => strtolower($request->username),
             'password_hash' => Hash::make($request->password),
+            'email_cifrado' => \Illuminate\Support\Facades\Crypt::encryptString($request->email),
             'activo' => 'S',
             'bloqueado' => 'N',
             'intentos_fallidos' => 0,

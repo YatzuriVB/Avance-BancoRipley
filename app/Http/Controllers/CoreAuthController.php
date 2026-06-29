@@ -22,6 +22,15 @@ class CoreAuthController extends Controller
             'dni.digits'   => 'El DNI debe tener 8 dígitos.',
         ]);
 
+        $throttleKey = 'core-login|' . $request->dni . '|' . $request->ip();
+
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($throttleKey);
+            return back()->withErrors([
+                'dni' => "Demasiados intentos. Intenta de nuevo en {$seconds} segundos.",
+            ])->withInput();
+        }
+
         $personal = DB::table('dpersonal as p')
             ->leftJoin('dpersonalasesor as pa', 'pa.pkpersonal', '=', 'p.pkpersonal')
             ->leftJoin('dasesor as a', 'a.pkasesor', '=', 'pa.pkasesor')
@@ -41,8 +50,11 @@ class CoreAuthController extends Controller
             ->first();
 
         if (!$personal) {
+            \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 60);
             return back()->withErrors(['dni' => 'El DNI ingresado no corresponde a un empleado activo en el sistema.'])->withInput();
         }
+
+        \Illuminate\Support\Facades\RateLimiter::clear($throttleKey);
 
         Session::put('core_logged_in', true);
         Session::put('core_pkpersonal', $personal->pkpersonal);

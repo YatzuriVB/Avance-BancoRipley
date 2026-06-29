@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Banco Ripley — Crear cuenta</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -126,6 +127,15 @@
                     <input id="username" type="text" name="username" value="{{ old('username') }}"
                         placeholder="Ej: jvaldivia26" required autocomplete="username" />
                     @error('username')
+                        <div class="error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="field">
+                    <label for="email">Correo electrónico</label>
+                    <input id="email" type="email" name="email" value="{{ old('email') }}"
+                            placeholder="correo@ejemplo.com" required autocomplete="email" />
+                    @error('email')
                         <div class="error">{{ $message }}</div>
                     @enderror
                 </div>
